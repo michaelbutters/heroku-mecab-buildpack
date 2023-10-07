@@ -1,0 +1,38 @@
+#!/bin/sh
+
+BUILD_DIR=$1
+
+echo "-----> Installing mecab and related packages"
+
+INSTALL_DIR="$BUILD_DIR/.heroku/mecab"
+CACHE_DIR="$2"
+
+mkdir -p $INSTALL_DIR
+
+# Install required libraries first
+apt-get update
+apt-get install -y wget build-essential
+
+# Download, compile and install MeCab
+wget https://github.com/taku910/mecab/archive/refs/tags/v0.996.tar.gz
+tar zxfv v0.996.tar.gz
+cd mecab-0.996
+./configure --prefix=$INSTALL_DIR --enable-utf8-only
+make
+make install
+cd ..
+
+# Download, compile and install IPA dictionary
+wget https://jaist.dl.sourceforge.net/project/mecab/mecab-ipadic/2.7.0-20070801/mecab-ipadic-2.7.0-20070801.tar.gz
+tar zxfv mecab-ipadic-2.7.0-20070801.tar.gz
+cd mecab-ipadic-2.7.0-20070801
+./configure --prefix=$INSTALL_DIR --with-charset=utf8
+make
+make install
+cd ..
+
+# Set environment variables to help find MeCab later on
+echo "export PATH=\"\$PATH:$INSTALL_DIR/bin\"" > $BUILD_DIR/.profile.d/mecab.sh
+echo "export LD_LIBRARY_PATH=\"\$LD_LIBRARY_PATH:$INSTALL_DIR/lib\"" >> $BUILD_DIR/.profile.d/mecab.sh
+
+echo "-----> Done installing mecab and related packages"
